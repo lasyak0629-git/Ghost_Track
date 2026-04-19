@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>GhostTrack</title>
+  <link rel="icon" href="data:,">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚌</text></svg>">
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <div class="radar"></div>
+  <div id="map"></div>
+  <div class="top-title">GHOST MODE READY</div>
+  <div id="system-mode" class="system-mode">Mode: Real-Time System</div>
+
+  <!-- 🚦 DELAY BANNER -->
+  <div id="delay-banner" style="display:none;">
+    <span class="delay-banner-dot"></span>
+    <span id="delay-banner-text">Heavy Traffic</span>
+  </div>
+
+  <!-- 🚦 DELAY TOAST -->
+  <div id="delay-toast" style="display:none;">
+    <div class="delay-toast-icon">🚦</div>
+    <div class="delay-toast-body">
+      <p id="delay-toast-title" class="delay-toast-title">Heavy Traffic Detected</p>
+      <p class="delay-toast-sub">Speed: <strong id="delay-toast-speed">--</strong> — ML recalculating ETA</p>
+      <p class="delay-toast-sub">Revised ETA: <strong id="delay-toast-eta">--</strong></p>
+    </div>
+    <button id="delay-toast-close">✕</button>
+  </div>
+
+  <!-- ⏰ CLOCK + PEAK + 🌙 MAP TOGGLE -->
+  <div class="clock-panel">
+    <span id="live-clock">00:00:00</span>
+    <span id="peak-badge" class="badge-offpeak">🟢 Off Peak</span>
+    <button id="map-toggle" class="map-toggle-btn" title="Toggle map theme">🌙</button>
+  </div>
+
+  <!-- 🗺️ ROUTE SEARCH -->
+  <div class="route-search-panel">
+    <div class="bus-selector-row">
+      <span style="font-size:12px;color:#aaa;">Set route for:</span>
+      <select id="route-bus-select">
+        <option value="BUS-01">🚌 BUS-01</option>
+        <option value="BUS-02">🚌 BUS-02</option>
+        <option value="BUS-03">🚌 BUS-03</option>
+      </select>
+    </div>
+    <div class="route-search-row">
+      <span class="route-dot green"></span>
+      <input id="input-start" type="text" placeholder="Start (e.g. MG Road)"/>
+    </div>
+    <div class="route-search-row">
+      <span class="route-dot red"></span>
+      <input id="input-end" type="text" placeholder="End (e.g. Jayanagar)"/>
+    </div>
+    <button id="btn-set-route">🗺️ Set Route</button>
+    <button id="btn-reset-route">✕ Reset</button>
+    <p id="route-status" class="route-status">Select a bus and set its route</p>
+  </div>
+
+  <!-- 📍 PROGRESS BAR -->
+  <div class="progress-bar-panel">
+    <div class="progress-bar-labels">
+      <span id="label-start">📍 Start</span>
+      <span id="label-end">🏁 End</span>
+    </div>
+    <div class="progress-bar-track">
+      <div id="progress-bar-fill" class="progress-bar-fill" style="width:0%"></div>
+      <div id="progress-marker" class="progress-marker" style="left:0%">🚍</div>
+    </div>
+    <div class="progress-bar-pct">
+      <span id="progress-pct">Select a bus to track</span>
+      <span id="stops-passed"></span>
+    </div>
+  </div>
+
+  <!-- 🚏 STOP PREDICTIONS PANEL -->
+  <div class="stop-panel" id="stop-panel">
+    <div class="stop-panel-header">
+      <span>🚏 Stop Predictions</span>
+      <span id="stop-panel-bus" class="stop-panel-bus">BUS-01</span>
+    </div>
+    <div id="stop-list"></div>
+  </div>
+
+  <!-- STATUS PANEL -->
+  <div class="status-panel">
+    <h3>🚌 GhostTrack</h3>
+    <div class="bus-tabs">
+      <button class="bus-tab active" data-bus="BUS-01">BUS-01</button>
+      <button class="bus-tab" data-bus="BUS-02">BUS-02</button>
+      <button class="bus-tab" data-bus="BUS-03">BUS-03</button>
+    </div>
+    <p id="tracking-status">👁 Live Tracking</p>
+    <p id="confidence">Confidence: 100%</p>
+    <p id="connection-status">🔌 Server: Connecting...</p>
+    <p id="buffer-status">Buffer: 0 points</p>
+    <p id="replay-status">Replay: None</p>
+    <p id="anomaly-status" style="font-weight:bold;">✅ Signal Normal</p>
+    <p>Route Health: <span id="route-score" style="font-weight:bold;">100%</span></p>
+    <div class="signal">
+      <span></span><span></span><span></span><span></span>
+    </div>
+  </div>
+
+  <!-- CONTROL PANEL -->
+  <div class="control-panel">
+    <button class="mode active">Normal</button>
+    <button class="mode">Slow</button>
+    <button class="mode danger">Very Bad</button>
+    <button id="toggle-follow">Follow: ON</button>
+    <button id="toggle-dashboard">📊 Show Charts</button>
+  </div>
+
+  <!-- INFO PANEL -->
+  <div class="info-panel">
+    <p id="speed">Speed: -- km/h</p>
+    <p id="eta">ETA: -- min</p>
+    <p id="status">Status: --</p>
+    <p id="distance">Distance: -- km</p>
+  </div>
+
+  <!-- ANALYTICS PANEL -->
+  <div class="analytics-panel">
+    <p>Packets Lost: <span id="loss">0</span></p>
+    <p>Recovery Events: <span id="recovery">0</span></p>
+  </div>
+
+  <!-- ML DASHBOARD -->
+  <div id="dashboard-panel" style="display:none;">
+    <div class="chart-block">
+      <p class="chart-label">Speed (km/h)</p>
+      <canvas id="speedChart" height="50"></canvas>
+    </div>
+    <div class="chart-block">
+      <p class="chart-label">Confidence (%)</p>
+      <canvas id="confidenceChart" height="50"></canvas>
+    </div>
+    <div class="chart-block">
+      <p class="chart-label">Packet Loss</p>
+      <canvas id="lossChart" height="50"></canvas>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

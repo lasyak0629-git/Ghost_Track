@@ -372,7 +372,9 @@ function updateCharts(speed, conf, dropped) {
 // ===============================
 // 🔌 WEBSOCKET
 // ===============================
-const socket = new WebSocket("ws://127.0.0.1:8000/ws");
+const host = window.location.host;
+const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+const socket = new WebSocket(`${protocol}://${host}/ws`);
 socket.onopen  = () => { updateConnection(true);  initCharts(); };
 socket.onclose = () => { updateConnection(false); };
 

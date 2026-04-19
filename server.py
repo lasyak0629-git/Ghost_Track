@@ -96,10 +96,10 @@ def get_ml(bus_id):
 def home(): return FileResponse("index.html")
 
 @app.get("/style.css")
-def css(): return FileResponse("style.css")
+def css(): return FileResponse("style.css", media_type="text/css")
 
 @app.get("/app.js")
-def js(): return FileResponse("app.js")
+def js(): return FileResponse("app.js", media_type="application/javascript")
 
 @app.get("/docs.html")
 def docs(): return FileResponse("docs.html")
